@@ -25,12 +25,8 @@ BEGIN
     -- Clínica A
     ('clinicaa@grupoib.internal', 'Estagiário - FaçaAmigos, Centro de Terapia Comportamental', 'intern_unit', 'clinica-a'),
     ('pj-clinicaa@grupoib.internal', 'Profissionais PJ - FaçaAmigos, Centro de Terapia Comportamental', 'professional_unit', 'clinica-a'),
-    ('clt-clinicaa@grupoib.internal', 'Funcionários CLT - FaçaAmigos, Centro de Terapia Comportamental', 'employee_unit', 'clinica-a'),
+    ('clt-clinicaa@grupoib.internal', 'Funcionários CLT - FaçaAmigos, Centro de Terapia Comportamental', 'employee_unit', 'clinica-a');
 
-    -- Clínica B
-    ('clinicab@grupoib.internal', 'Estagiário - Clínica B', 'intern_unit', 'clinica-b'),
-    ('pj-clinicab@grupoib.internal', 'Profissionais PJ - Clínica B', 'professional_unit', 'clinica-b'),
-    ('clt-clinicab@grupoib.internal', 'Funcionários CLT - Clínica B', 'employee_unit', 'clinica-b');
 
   FOR kiosk_users IN SELECT * FROM tmp_kiosks LOOP
     SELECT id INTO v_user_id FROM auth.users WHERE email = kiosk_users.email;
