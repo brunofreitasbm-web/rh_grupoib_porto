@@ -187,7 +187,7 @@ export default function PjInvoiceUploadPage() {
           <h1 className="text-xl font-bold text-slate-800 mb-2">Link Indisponível</h1>
           <p className="text-sm text-slate-600 mb-6">{error}</p>
           <div className="bg-slate-50 p-4 rounded-xl text-xs text-slate-500 text-left">
-            Caso precise emitir sua nota ou solicitar um novo link, entre em contato direto com a equipe de Recursos Humanos / Gestão de Pessoas do FaçaAmigos.
+            Caso precise emitir sua nota ou solicitar um novo link, entre em contato direto com a equipe de Recursos Humanos / Gestão de Pessoas.
           </div>
         </div>
       </div>
@@ -252,7 +252,7 @@ export default function PjInvoiceUploadPage() {
   return (
     <div className="min-h-screen bg-[#f4f1ea] py-10 px-4 flex flex-col justify-center items-center">
       <div className="w-full max-w-xl bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
-        {/* Faixa decorativa FaçaAmigos */}
+        {/* Faixa decorativa */}
         <div className="h-2.5 bg-[#FFE234] w-full" />
 
         <div className="p-6 sm:p-8">
@@ -261,7 +261,7 @@ export default function PjInvoiceUploadPage() {
               Envio de Nota Fiscal de Serviços (NFSe)
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-1">
-              FaçaAmigos • Gestão de Pessoas & Produção PJ
+              Gestão de Pessoas & Produção PJ
             </p>
           </div>
 

@@ -34,7 +34,7 @@ export default function PurgeConfirmModal({ title, intro, items, busy, progress,
         <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800">
           <p className="font-semibold">⚠️ Irreversível</p>
           <p>
-            Remove o registro e o currículo do banco de origem (Faça Amigos), além de DISC, notas e
+            Remove o registro e o currículo do banco de origem, além de DISC, notas e
             alocações deste sistema. Quem estiver em processo ativo, na Simulação ou virou Freelancer é
             preservado.
           </p>

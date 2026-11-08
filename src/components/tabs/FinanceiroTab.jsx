@@ -1019,7 +1019,7 @@ export default function FinanceiroTab({ filterUnit, restrictedUnitIds = [] }) {
         </div>
       )}
 
-      {/* SUB-ABA 3: REPASSES A PROFISSIONAIS PJ (FAÇAAMIGOS / GRUPO IB) */}
+      {/* SUB-ABA 3: REPASSES A PROFISSIONAIS PJ  */}
       {activeSubTab === 'repasses_pj' && (
         <div className="p-4 space-y-4">
           <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">

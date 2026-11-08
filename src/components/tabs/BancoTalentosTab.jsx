@@ -820,7 +820,7 @@ export default function BancoTalentosTab({ units = [] }) {
       }
       // Exclui o registro remoto dos aliases; se falhar, o alias já fica oculto pelo servidor.
       const { error: purgeErr } = await supabase.functions.invoke('purge-talent-candidates', { body: { ids: aliasIds, reason: 'duplicado' } });
-      if (purgeErr) toast.warning('Mesclado, mas o registro original no Faça Amigos não foi excluído (ficará oculto).');
+      if (purgeErr) toast.warning('Mesclado, mas o registro original não foi excluído (ficará oculto).');
       else toast.success(`${aliasIds.length} duplicado(s) mesclado(s).`);
       await load();
     } catch (err) {

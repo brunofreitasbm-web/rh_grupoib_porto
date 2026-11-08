@@ -251,7 +251,7 @@ export default function FreelanceSelfRegistration({ units = [], branding, onCanc
             <span className="bg-teal-100 text-teal-800 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full">
               Cadastro Obrigatório
             </span>
-            <span className="text-xs text-gray-400">Hub FaçaAmigos</span>
+            <span className="text-xs text-gray-400">Hub de Gestão</span>
           </div>
           <h2 className="text-xl font-bold text-gray-800 mt-0.5">Cadastrar como Freelancer (Autônomo PF)</h2>
         </div>

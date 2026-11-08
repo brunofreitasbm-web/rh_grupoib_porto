@@ -29,6 +29,7 @@ import { supabase } from '../../supabase';
 import { NATIONAL_FIXED_HOLIDAYS, movableHolidays } from '../../utils/cltCalculations';
 import { toast } from 'sonner';
 import UsuariosSistema from '../config/UsuariosSistema';
+import { isFacaAmigosUnit } from '../../utils/workspaceUnits';
 
 export default function ConfiguracoesTab({ userRole = 'admin', units = [], onSaveUnit, onSaveSettings, currentUserId = null }) {
   const [activeSubTab, setActiveSubTab] = useState('empresa');
@@ -63,6 +64,7 @@ export default function ConfiguracoesTab({ userRole = 'admin', units = [], onSav
   }));
 
   const availableUnits = rawAvailableUnits.filter((u) => {
+    if (isFacaAmigosUnit(u)) return false;
     const uId = (u.id || '').toLowerCase();
     const uName = (u.name || u.nome || '').toLowerCase();
     const isTargetHidden = uId.includes('antonio-barreto') || uId.includes('generalissimo') || uName.includes('antônio barreto') || uName.includes('generalíssimo');
