@@ -152,6 +152,12 @@ export function computeWorkedIntervals(marks) {
 
 // Minutos noturnos (22h–5h) e seu equivalente em "hora reduzida" (52min30s =
 // 1h, art. 73 §1 CLT): realMinutes * 60/52.5.
+// A hora é lida em America/Belem (como dateKeyBelem), nunca no fuso da máquina.
+const belemHourFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'America/Belem', hour: '2-digit', hourCycle: 'h23',
+});
+const belemHour = (date) => Number(belemHourFormatter.format(date));
+
 export function nightMinutes(intervals) {
   let realMinutes = 0;
   for (const interval of intervals) {
@@ -159,7 +165,7 @@ export function nightMinutes(intervals) {
     const end = new Date(interval.end);
     while (cursor < end) {
       const next = new Date(Math.min(end.getTime(), cursor.getTime() + 60000));
-      const hour = cursor.getHours();
+      const hour = belemHour(cursor);
       if (hour >= 22 || hour < 5) realMinutes += (next - cursor) / 60000;
       cursor = next;
     }
