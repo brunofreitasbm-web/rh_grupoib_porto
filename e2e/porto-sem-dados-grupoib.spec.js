@@ -72,7 +72,7 @@ async function assertNoIb(page, where) {
   const text = await page.locator('body').innerText();
   for (const n of IB_NAMES) expect(text, `${where}: ${n}`).not.toContain(n);
   for (const n of IB_UNIT_NAMES) expect(text, `${where}: ${n}`).not.toContain(n);
-  expect(text, where).not.toMatch(/Grão Pará|Parque Shopping|Umarizal/i);
+  expect(text, where).not.toMatch(/Grão Pará|Parque Shopping|Umarizal|Fa[çc]a ?Amigos/i);
 }
 
 // Todos os botoes de aba do modulo de estagiarios (descobertos em runtime).

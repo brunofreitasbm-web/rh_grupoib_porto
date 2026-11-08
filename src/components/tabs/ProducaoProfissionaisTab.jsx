@@ -101,7 +101,7 @@ export default function ProducaoProfissionaisTab({ filterUnit, restrictedUnitIds
       const semEmail = results.filter((r) => r.status === 'sem_email').length;
       const erros = results.filter((r) => r.status === 'erro').length;
 
-      if (sent > 0) toast.success(`Aviso FaçaAmigos com link enviado para ${sent} prestador(es).`);
+      if (sent > 0) toast.success(`Aviso com link enviado para ${sent} prestador(es).`);
       if (semEmail > 0) toast.warning(`${semEmail} prestador(es) sem e-mail cadastrado.`);
       if (erros > 0) toast.error(`Falha ao avisar ${erros} prestador(es).`);
       if (results.length === 0) toast.error('Nenhum resultado retornado pelo envio de aviso.');
@@ -138,7 +138,7 @@ export default function ProducaoProfissionaisTab({ filterUnit, restrictedUnitIds
       return;
     }
 
-    if (!window.confirm(`Enviar aviso FaçaAmigos com link e valor apurado para ${pendingRows.length} prestador(es) pendentes?`)) {
+    if (!window.confirm(`Enviar aviso com link e valor apurado para ${pendingRows.length} prestador(es) pendentes?`)) {
       return;
     }
 
@@ -288,15 +288,15 @@ export default function ProducaoProfissionaisTab({ filterUnit, restrictedUnitIds
           <button
             onClick={() => setShowDispatchConfigModal(true)}
             className="flex items-center gap-1.5 bg-[#F0196B] hover:bg-[#d6135c] text-white font-bold py-2 px-3 rounded-lg text-xs transition-colors shadow-sm"
-            title="Configurar dia do mês para disparo automatizado e disparar e-mails FaçaAmigos aos PJ"
+            title="Configurar dia do mês para disparo automatizado e disparar e-mails aos PJ"
           >
-            <Bell size={14} /> Disparo de E-mails PJ (FaçaAmigos)
+            <Bell size={14} /> Disparo de E-mails PJ
           </button>
           <button
             onClick={handleNotifyPending}
             disabled={notifyingBulk}
             className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-3 rounded-lg text-xs transition-colors shadow-sm disabled:opacity-50"
-            title="Avisar todos os prestadores pendentes de emissão de NF nesta competência com o template FaçaAmigos"
+            title="Avisar todos os prestadores pendentes de emissão de NF nesta competência com o template padrão"
           >
             {notifyingBulk ? <Loader2 size={14} className="animate-spin" /> : <Bell size={14} />} Avisar Pendentes
           </button>
@@ -310,7 +310,7 @@ export default function ProducaoProfissionaisTab({ filterUnit, restrictedUnitIds
       </div>
 
       <p className="px-4 pt-3 text-[11px] text-gray-500">
-        Base de conferência para as Notas Fiscais da competência. As notas enviadas pelos prestadores via link seguro do FaçaAmigos aparecem diretamente nesta tabela para validação do Administrador do RH. Ao aprovar, o registro segue automaticamente para a programação de pagamento do Financeiro.
+        Base de conferência para as Notas Fiscais da competência. As notas enviadas pelos prestadores via link seguro aparecem diretamente nesta tabela para validação do Administrador do RH. Ao aprovar, o registro segue automaticamente para a programação de pagamento do Financeiro.
       </p>
 
       <div className="overflow-x-auto p-4">
@@ -443,7 +443,7 @@ export default function ProducaoProfissionaisTab({ filterUnit, restrictedUnitIds
                         <button
                           onClick={() => handleNotifyOne(row.professional.id)}
                           disabled={isNotifying}
-                          title={notice ? `Aviso enviado em ${new Date(notice.sentAt).toLocaleDateString('pt-BR')} — clique para reenviar` : 'Emitir aviso FaçaAmigos com link e valor apurado'}
+                          title={notice ? `Aviso enviado em ${new Date(notice.sentAt).toLocaleDateString('pt-BR')} — clique para reenviar` : 'Emitir aviso com link e valor apurado'}
                           className={`inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors shadow-sm disabled:opacity-50 ${
                             notice ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-[#F0196B] hover:bg-[#d6135c] text-white'
                           }`}

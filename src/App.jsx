@@ -100,6 +100,7 @@ import { fetchInternBiometry } from './utils/internBiometry';
 import useInternPhotos from './hooks/useInternPhotos';
 import { useBackHandler } from './hooks/useBackHandler';
 import { withAppClaims } from './utils/sessionClaims';
+import { isFacaAmigosUnit } from './utils/workspaceUnits';
 // Autocadastro de Profissionais PJ (sem sessão) — carregado sob demanda para
 // não engordar o bundle inicial do quiosque (ver plano do módulo de autocadastro PJ).
 const ProfessionalSelfRegistration = lazyWithRetry(() => import('./components/ProfessionalSelfRegistration'));
@@ -458,7 +459,7 @@ export default function App() {
   // Sempre oculta unidades de outro workspace: com escopo "all" o RLS devolve
   // também as unidades/estagiários do Grupo IB, e as abas filtram por este vetor.
   const restrictedUnitIds = useMemo(
-    () => units.filter((u) => u.workspaceId && u.workspaceId !== BRANDING.id).map((u) => u.id),
+    () => units.filter((u) => (u.workspaceId && u.workspaceId !== BRANDING.id) || isFacaAmigosUnit(u)).map((u) => u.id),
     [units]
   );
 
@@ -475,7 +476,7 @@ export default function App() {
 
   const visibleUnits = useMemo(
     () => units.filter((u) => {
-      if (restrictedUnitIds.includes(u.id)) return false;
+      if (restrictedUnitIds.includes(u.id) || isFacaAmigosUnit(u)) return false;
       const uId = (u.id || '').toLowerCase();
       const uName = (u.name || '').toLowerCase();
       const isTargetHidden = uId.includes('antonio-barreto') || uId.includes('generalissimo') || uName.includes('antônio barreto') || uName.includes('generalíssimo');
@@ -1837,7 +1838,7 @@ export default function App() {
       const { data: unitsData } = await supabase.from('units').select('*');
 
       // Backup da Porto Terapia: com escopo "all" o banco devolve também o Grupo IB.
-      const foreignUnitIds = new Set((unitsData || []).filter((u) => u.workspace_id && u.workspace_id !== BRANDING.id).map((u) => u.id));
+      const foreignUnitIds = new Set((unitsData || []).filter((u) => (u.workspace_id && u.workspace_id !== BRANDING.id) || isFacaAmigosUnit(u)).map((u) => u.id));
       const ownInterns = (internsData || []).filter((i) => !foreignUnitIds.has(i.unit_id));
       const foreignInternIds = new Set((internsData || []).filter((i) => foreignUnitIds.has(i.unit_id)).map((i) => i.id));
       const backupObj = {
@@ -3140,7 +3141,7 @@ export default function App() {
               </div>
             }>
               <FreelanceKiosk
-                units={units}
+                units={visibleUnits}
                 branding={BRANDING}
                 onBack={() => setKioskCategory(null)}
               />
@@ -8974,7 +8975,7 @@ export default function App() {
                   )}
                   {(visitedAdminTabs.has('pj_documentos') || activeAdminTab === 'pj_documentos') && (
                   <div style={{ display: activeAdminTab === 'pj_documentos' ? 'block' : 'none' }}>
-                    <DocumentosProfissionaisTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} units={units} branding={BRANDING} />
+                    <DocumentosProfissionaisTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} units={visibleUnits} branding={BRANDING} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('clt_dashboard') || activeAdminTab === 'clt_dashboard') && (
@@ -9053,7 +9054,7 @@ export default function App() {
         isOpen={isOmnibarOpen}
         setIsOpen={setIsOmnibarOpen}
         interns={interns}
-        units={units}
+        units={visibleUnits}
         onSelectAction={handleOmnibarAction}
       />
     </ErrorBoundary>
@@ -9153,7 +9154,7 @@ export default function App() {
             </div>
           }>
             <ProfessionalSelfRegistration
-              units={units}
+              units={visibleUnits}
               branding={BRANDING}
               onCancel={() => setCurrentView('kiosk')}
             />
@@ -9163,7 +9164,7 @@ export default function App() {
         isOpen={isOmnibarOpen}
         setIsOpen={setIsOmnibarOpen}
         interns={interns}
-        units={units}
+        units={visibleUnits}
         onSelectAction={handleOmnibarAction}
       />
     </ErrorBoundary>
@@ -9184,7 +9185,7 @@ export default function App() {
         isOpen={isOmnibarOpen}
         setIsOpen={setIsOmnibarOpen}
         interns={interns}
-        units={units}
+        units={visibleUnits}
         onSelectAction={handleOmnibarAction}
       />
     </ErrorBoundary>
@@ -9205,7 +9206,7 @@ export default function App() {
           isOpen={isOmnibarOpen}
           setIsOpen={setIsOmnibarOpen}
           interns={interns}
-          units={units}
+          units={visibleUnits}
           onSelectAction={handleOmnibarAction}
         />
       )}
@@ -9220,7 +9221,7 @@ export default function App() {
         isOpen={showPublicPayrollModal}
         onClose={() => setShowPublicPayrollModal(false)}
         branding={BRANDING}
-        units={visibleUnits.length > 0 ? visibleUnits : units}
+        units={visibleUnits}
       />
     </>
   );

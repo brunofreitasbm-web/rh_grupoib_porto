@@ -77,7 +77,7 @@ export default function MergeDuplicatesModal({ clusters, busy, onCancel, onMerge
 
         <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-1">
           <p className="font-semibold">O que será feito</p>
-          <p>Status mais avançado, notas somadas e DISC respondido ficam no principal. As outras {aliases.length} candidatura(s) são excluídas do Faça Amigos (currículo incluso).</p>
+          <p>Status mais avançado, notas somadas e DISC respondido ficam no principal. As outras {aliases.length} candidatura(s) são excluídas do banco de origem (currículo incluso).</p>
         </div>
 
         <div className="flex justify-end gap-2">

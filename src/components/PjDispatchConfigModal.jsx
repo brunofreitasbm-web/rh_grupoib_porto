@@ -3,6 +3,7 @@ import { X, Bell, Calendar, Clock, Sliders, CheckCircle2, AlertCircle, Loader2, 
 import { supabase } from '../supabase';
 import { toast } from 'sonner';
 import { BRANDING } from '../config/branding';
+import { isFacaAmigosUnit } from '../utils/workspaceUnits';
 
 const fmtBRL = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -40,7 +41,7 @@ export default function PjDispatchConfigModal({
           .order('name', { ascending: true });
 
         // Unidades base (do banco ou branding)
-        const baseList = (dbUnits && dbUnits.length > 0 ? dbUnits : BRANDING.kioskUnits || []).map((u) => ({
+        const baseList = (dbUnits && dbUnits.length > 0 ? dbUnits : BRANDING.kioskUnits || []).filter((u) => !isFacaAmigosUnit(u)).map((u) => ({
           id: u.id,
           name: u.name || u.buttonLabel || u.id,
           dayOfMonth: Number(u.pj_fechamento_dia) || 20,
@@ -208,7 +209,7 @@ export default function PjDispatchConfigModal({
       };
     });
 
-    const confirmMsg = `Confirmar o disparo de e-mails com template FaçaAmigos para ${items.length} prestador(es) na competência ${monthKey}?`;
+    const confirmMsg = `Confirmar o disparo de e-mails com template Porto Terapia para ${items.length} prestador(es) na competência ${monthKey}?`;
     if (!window.confirm(confirmMsg)) return;
 
     setSendingBulk(true);
@@ -225,7 +226,7 @@ export default function PjDispatchConfigModal({
       const erros = results.filter((r) => r.status === 'erro').length;
 
       if (sent > 0) {
-        toast.success(`E-mails FaçaAmigos disparados com sucesso para ${sent} prestador(es)!`);
+        toast.success(`E-mails Porto Terapia disparados com sucesso para ${sent} prestador(es)!`);
       }
       if (semEmail > 0) toast.warning(`${semEmail} prestador(es) sem e-mail.`);
       if (erros > 0) toast.error(`Falha no envio para ${erros} prestador(es).`);
@@ -248,7 +249,7 @@ export default function PjDispatchConfigModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[92vh]">
-        {/* Header FaçaAmigos */}
+        {/* Header Porto Terapia */}
         <div className="h-2 bg-[#FFE234] w-full" />
         <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
           <div className="flex items-center gap-2.5">
@@ -260,7 +261,7 @@ export default function PjDispatchConfigModal({
                 Configuração de Apuração & Disparo PJ por Unidade
               </h3>
               <p className="text-xs text-slate-500">
-                Módulo Grupo IB (FaçaAmigos) • Competência ativa: <strong>{monthKey}</strong>
+                Módulo Grupo IB (Porto Terapia) • Competência ativa: <strong>{monthKey}</strong>
               </p>
             </div>
           </div>
@@ -304,7 +305,7 @@ export default function PjDispatchConfigModal({
                 <AlertCircle size={18} className="text-teal-700 shrink-0 mt-0.5" />
                 <div>
                   <strong>Configuração por Unidade:</strong><br />
-                  Cada unidade do Grupo IB pode ter um dia do mês e horário de fechamento próprios. O sistema consolida as presenças dos prestadores daquela unidade e envia o e-mail FaçaAmigos na data estipulada.
+                  Cada unidade do Grupo IB pode ter um dia do mês e horário de fechamento próprios. O sistema consolida as presenças dos prestadores daquela unidade e envia o e-mail Porto Terapia na data estipulada.
                 </div>
               </div>
 
