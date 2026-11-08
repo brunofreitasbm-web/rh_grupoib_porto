@@ -1,3 +1,4 @@
+import { BRANDING } from '../config/branding';
 // Vocabulário do Banco de Talentos. Mantenha em sincronia com ALLOWED_STATUS em
 // supabase/functions/fetch-talent-bank e export-job-applications, e com o CHECK
 // de talent_candidates_meta.status (migração 20260915_talent_bank_overlay_disc).
@@ -72,9 +73,8 @@ export const normalizeCandidateUnit = (candidate, basketAssignment) => {
 
   // Fallback para simulação prévia caso tenha sido alocado no UnitBasketBoard
   const bUnit = basketAssignment?.unit_id;
-  if (bUnit === 'faca-amigos-parque-shopping') return 'PARQUE_SHOPPING';
-  if (bUnit === 'faca-amigos-grao-para') return 'BOSQUE_GRAO_PARA';
-  if (bUnit === 'clinica-a') return 'CLINICA_FATIMA';
+  const byBasket = BRANDING.kioskUnits.find((ku) => ku.id === bUnit)?.talentCode;
+  if (byBasket) return byBasket;
 
   return 'SEM_UNIDADE';
 };

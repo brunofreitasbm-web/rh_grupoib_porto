@@ -1,3 +1,4 @@
+import { BRANDING } from './branding';
 // Perfis comportamentais esperados por FUNÇÃO, descritos em termos DISC.
 //
 // Usados pela subpágina "Simulação por Unidade" do Banco de Talentos para
@@ -124,11 +125,9 @@ export const roleLabel = (roleId) => ROLE_BY_ID[roleId]?.label || roleId;
 // Unidades que aparecem como "baskets" na simulação, na ordem de exibição.
 // Os dados (nome, accent, endereço) vêm de BRANDING.kioskUnits; shortLabel
 // é o rótulo curto usado no quadro.
-export const SIMULATION_UNITS = [
-  { id: 'faca-amigos-grao-para', shortLabel: 'FaçaAmigos Grão Pará' },
-  { id: 'faca-amigos-parque-shopping', shortLabel: 'FaçaAmigos Parque Shopping' },
-  { id: 'clinica-a', shortLabel: 'FaçaAmigos Clínica (Umarizal)' },
-];
+export const SIMULATION_UNITS = BRANDING.showTalentBankModule
+  ? BRANDING.kioskUnits.map((ku) => ({ id: ku.id, shortLabel: ku.name }))
+  : [];
 
 // Classes Tailwind por accent — escritas por extenso para o scanner JIT.
 export const UNIT_ACCENT_CLASSES = {

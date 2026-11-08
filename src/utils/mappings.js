@@ -583,7 +583,7 @@ export const mapUnitToDb = (u) => {
   if (!u) return {};
   const radiusM = safeNum(u.radiusM ?? u.radius_m, safeNum(u.radiusKm ?? u.radius_km, 5) * 1000);
   const radiusKm = safeNum(u.radiusKm ?? u.radius_km, radiusM / 1000);
-  const resolvedWorkspaceId = u.workspaceId || u.workspace_id || (['antonio-barreto', 'generalissimo'].includes(u.id) ? 'porto-terapia' : (BRANDING?.id || null));
+  const resolvedWorkspaceId = u.workspaceId || u.workspace_id || (BRANDING?.id || null);
   return {
     id: u.id,
     name: u.name || u.nome || '',
@@ -629,9 +629,7 @@ export const safeUpsertUnits = async (supabaseClient, dbUnits) => {
 
   const payload = rawPayload.map(item => {
     if (!item.workspace_id) {
-      item.workspace_id = ['antonio-barreto', 'generalissimo'].includes(item.id)
-        ? 'porto-terapia'
-        : (BRANDING?.id || 'porto-terapia');
+      item.workspace_id = BRANDING.id;
     }
     delete item.workspaceId;
     delete item.radiusKm;

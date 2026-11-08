@@ -53,6 +53,14 @@ Vai aparecer um endereço como `http://localhost:5173` — abra no navegador.
 5. Cada `git push` na branch principal gera um novo deploy automaticamente.
    - Para trocar o domínio: **Settings → Domains**.
 
+### Dois sites, dois bancos (Porto Terapia e Grupo IB)
+
+O mesmo código gera dois sites independentes. Cada deploy da Vercel tem o seu **próprio projeto Supabase**
+(`VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` diferentes) e o seu `VITE_WORKSPACE_ID`
+(`porto-terapia` ou `grupoib`). Cada build inclui só o branding, as unidades, os quiosques e os administradores
+do próprio grupo; não há seletor de grupo nem consulta ao banco do outro. Para acessar o outro grupo, saia
+deste site e entre no site dele.
+
 ### ⚠️ Ajuste obrigatório do banco após publicar (URLs autorizadas)
 
 Depois de ter o link da Vercel (ex.: `algum-nome.vercel.app`, ou o domínio próprio configurado):

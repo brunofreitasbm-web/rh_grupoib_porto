@@ -215,11 +215,8 @@ export const permissionsToList = (map = {}) =>
 
 export const countGrantedPermissions = (map = {}) => permissionsToList(map).length;
 
-// Escopos de workspace atribuíveis. 'all' só aparece para quem já tem 'all'
-// (o banco recusaria criar conta com escopo maior que o do chamador — ver
-// assert_system_user_admin).
+// Escopo de workspace atribuível: somente o do próprio deploy (cada site tem
+// seu banco; não existe escopo 'all' nem escopo do outro grupo).
 export const WORKSPACE_SCOPE_OPTIONS = [
-  { id: 'all', label: 'Todos os workspaces', description: 'Porto Terapia + Grupo IB.' },
-  { id: 'porto-terapia', label: 'Porto Terapia', description: 'Somente as unidades da Porto Terapia.' },
-  { id: 'grupoib', label: 'Grupo IB', description: 'Somente as unidades do Grupo IB.' },
+  { id: BRANDING.id, label: BRANDING.displayName, description: `Somente as unidades de ${BRANDING.displayName}.` },
 ];

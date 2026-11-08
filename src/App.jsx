@@ -31,7 +31,7 @@ import {
 } from './utils/mappings';
 import { formatDistance, startOfWeek, validateCPF, escapeHtmlForDocument } from './utils/helpers';
 import { sanitizeHtml } from './utils/sanitizeHtml';
-import { BRANDING, WORKSPACES } from './config/branding';
+import { BRANDING } from './config/branding';
 import { LABOR } from './config/labor';
 import { CourseSelect, InternshipTypeField } from './components/CourseFields';
 import { normalizeCourseValue, getInternshipTypeLabel } from './config/academicCourses';
@@ -61,13 +61,17 @@ const DossieTab = lazyWithRetry(() => import('./components/tabs/DossieTab'));
 const AlertasRhTab = lazyWithRetry(() => import('./components/tabs/AlertasRhTab'));
 const AniversariantesTab = lazyWithRetry(() => import('./components/tabs/AniversariantesTab'));
 const ConfiguracoesTab = lazyWithRetry(() => import('./components/tabs/ConfiguracoesTab'));
-const BancoTalentosTab = lazyWithRetry(() => import('./components/tabs/BancoTalentosTab'));
+const BancoTalentosTab = __TALENT_BANK_ENABLED__
+  ? lazyWithRetry(() => import('./components/tabs/BancoTalentosTab'))
+  : () => null;
 // Abas do módulo Profissionais PJ (prestadores de serviço) — separadas das
 // abas de estagiário de propósito (ver plano do módulo PJ, seção 3.5).
 const DashboardProfissionaisTab = lazyWithRetry(() => import('./components/tabs/DashboardProfissionaisTab'));
 const ProfissionaisTab = lazyWithRetry(() => import('./components/tabs/ProfissionaisTab'));
 const PresencaProfissionaisTab = lazyWithRetry(() => import('./components/tabs/PresencaProfissionaisTab'));
-const ProducaoProfissionaisTab = lazyWithRetry(() => import('./components/tabs/ProducaoProfissionaisTab'));
+const ProducaoProfissionaisTab = __PJ_MODULE_ENABLED__
+  ? lazyWithRetry(() => import('./components/tabs/ProducaoProfissionaisTab'))
+  : () => null;
 const DocumentosProfissionaisTab = lazyWithRetry(() => import('./components/tabs/DocumentosProfissionaisTab'));
 // Abas do módulo Funcionários CLT (empregados) — terceiro tipo de vínculo do
 // hub de RH, ao lado de Estagiários e Profissionais PJ (ver plano do módulo).
@@ -106,8 +110,12 @@ const ProfessionalSelfRegistration = lazyWithRetry(() => import('./components/Pr
 // Autocadastro de Funcionários CLT (sem sessão) — mesmo motivo do lazy acima.
 const EmployeeSelfRegistration = lazyWithRetry(() => import('./components/EmployeeSelfRegistration'));
 // Quiosque e Autocadastro de Freelancers (sem sessão) — módulo Freelance (trabalhos pontuais).
-const FreelanceKiosk = lazyWithRetry(() => import('./components/FreelanceKiosk'));
-const FreelanceSelfRegistration = lazyWithRetry(() => import('./components/FreelanceSelfRegistration'));
+const FreelanceKiosk = __FREELANCE_MODULE_ENABLED__
+  ? lazyWithRetry(() => import('./components/FreelanceKiosk'))
+  : () => null;
+const FreelanceSelfRegistration = __FREELANCE_MODULE_ENABLED__
+  ? lazyWithRetry(() => import('./components/FreelanceSelfRegistration'))
+  : () => null;
 
 
 
@@ -117,16 +125,16 @@ const FreelanceSelfRegistration = lazyWithRetry(() => import('./components/Freel
 
 // Administradores com acesso ao painel de supervisão (role 'supervisor'),
 // nomeados neste site. Cada um possui sua própria conta em auth.users (ver
-// supabase_schema.sql) — a lista em si vem do branding por workspace, pois o
-// clone (Grupo IB) só expõe o Bruno como opção nomeada de login.
+// supabase_schema.sql) — a lista em si vem do branding do workspace deste
+// build; contas do outro grupo não existem neste bundle nem neste banco.
 const ADMIN_USERS = BRANDING.adminUsers;
 
 // Resolve o texto digitado no login (nome, e-mail ou em branco) para uma
 // chave de ADMIN_USERS. Não há lista visível nessa tela — só quem já sabe o
 // nome/e-mail correto consegue acessar como um admin nomeado; qualquer outro
 // texto (ou campo vazio) cai no admin padrão deste site: "supervisor"
-// (Supervisor Geral) na Porto Terapia, ou o único admin do workspace quando
-// não existir essa chave genérica (caso do clone Grupo IB, só com "bruno").
+// (Supervisor Geral) quando o workspace tem essa chave genérica, ou o primeiro
+// admin do workspace quando não existir.
 const normalizeLogin = (str) =>
   (str || '')
     .trim()
@@ -230,7 +238,7 @@ export default function App() {
   const [isOmnibarOpen, setIsOmnibarOpen] = useState(false);
   const [institutionSettings, setInstitutionSettings] = useState(() => {
     try {
-      const saved = localStorage.getItem(`app_configuracoes_${BRANDING.id || 'porto-terapia'}`);
+      const saved = localStorage.getItem(`app_configuracoes_${BRANDING.id}`);
       if (saved) return JSON.parse(saved);
     } catch { /* ignore */ }
     return {
@@ -429,51 +437,11 @@ export default function App() {
   const [filterUnit, setFilterUnit] = useState('all');
   const [showPublicPayrollModal, setShowPublicPayrollModal] = useState(false);
 
-  // Workspace administrativo: qual grupo de unidades está sendo exibido.
-  // Começa no workspace deste próprio site (BRANDING.id) — só quem tem
-  // workspace_scope "all" (Bruno, Guimelly, Isabella) pode alternar para o outro.
-  const [adminWorkspace, setAdminWorkspace] = useState(BRANDING.id);
-
-  // Só uma conta com workspace_scope "all" no JWT (ver supabase_schema.sql,
-  // seção "MULTI-WORKSPACE") pode alternar entre os dois grupos de unidades.
-  const canSwitchWorkspace = useMemo(() => {
-    const scope = user?.user_metadata?.workspace_scope || [];
-    return scope.includes('all');
-  }, [user]);
-
-  useEffect(() => {
-    if (!canSwitchWorkspace && adminWorkspace !== BRANDING.id) {
-      setAdminWorkspace(BRANDING.id);
-    }
-  }, [canSwitchWorkspace, adminWorkspace]);
-
   const effectiveFilterUnit = filterUnit;
 
-  // Unidades ocultas da UI: para quem enxerga os dois grupos (workspace_scope
-  // "all"), esconde o grupo que não está selecionado no momento no seletor de
-  // workspace. Para qualquer outra sessão, o RLS já retornou só as unidades do
-  // próprio workspace — não há nada a restringir aqui.
-  const restrictedUnitIds = useMemo(() => {
-    if (!canSwitchWorkspace) return [];
-    return units.filter((u) => u.workspaceId && u.workspaceId !== adminWorkspace).map((u) => u.id);
-  }, [canSwitchWorkspace, units, adminWorkspace]);
-
-  const visibleUnits = useMemo(
-    () => units.filter((u) => {
-      if (restrictedUnitIds.includes(u.id)) return false;
-      const uId = (u.id || '').toLowerCase();
-      const uName = (u.name || '').toLowerCase();
-      const isTargetHidden = uId.includes('antonio-barreto') || uId.includes('generalissimo') || uName.includes('antônio barreto') || uName.includes('generalíssimo');
-      if (BRANDING.id === 'grupoib' && (isTargetHidden || u.workspaceId === 'porto-terapia')) {
-        return false;
-      }
-      if (BRANDING.id === 'porto-terapia' && u.workspaceId === 'grupoib') {
-        return false;
-      }
-      return true;
-    }),
-    [units, restrictedUnitIds]
-  );
+  // Cada deploy usa o próprio projeto Supabase, então `units` já contém só as
+  // unidades deste workspace. Não há seletor de grupo nem filtro cruzado.
+  const visibleUnits = units;
 
   // Fluxo Admissional (Upload de Documentos)
   const [selectedAdmissionalIntern, setSelectedAdmissionalIntern] = useState('');
@@ -841,7 +809,6 @@ export default function App() {
       if (!mod) return;
       const tabOk = commonTabs.includes(saved.tab)
         || (mod === 'interns' ? internTabs.includes(saved.tab) : String(saved.tab).startsWith(prefix[mod]));
-      if (saved.workspace && canSwitchWorkspace && WORKSPACES[saved.workspace]) setAdminWorkspace(saved.workspace);
       setAdminModule(mod);
       if (tabOk) setActiveAdminTab(saved.tab);
     } catch { /* storage indisponível ou JSON inválido: mantém o padrão */ }
@@ -850,9 +817,9 @@ export default function App() {
   useEffect(() => {
     if (!adminNavKey || navRestoredForRef.current !== adminNavKey) return;
     try {
-      localStorage.setItem(adminNavKey, JSON.stringify({ module: adminModule, tab: activeAdminTab, workspace: adminWorkspace }));
+      localStorage.setItem(adminNavKey, JSON.stringify({ module: adminModule, tab: activeAdminTab }));
     } catch { /* ignore */ }
-  }, [adminNavKey, adminModule, activeAdminTab, adminWorkspace]);
+  }, [adminNavKey, adminModule, activeAdminTab]);
   // Declarado depois do restore/save: libera a gravação só após a restauração aplicada.
   useEffect(() => { navRestoredForRef.current = adminNavKey; }, [adminNavKey]);
 
@@ -927,7 +894,7 @@ export default function App() {
 
   useEffect(() => {
     const handleOnline = async () => {
-      const offlineStorageKey = `offline_records_${BRANDING.id || 'porto-terapia'}`;
+      const offlineStorageKey = `offline_records_${BRANDING.id}`;
       const offlineRecords = JSON.parse(localStorage.getItem(offlineStorageKey) || '[]');
       if (offlineRecords.length > 0) {
         toast.info(`Sincronizando ${offlineRecords.length} ponto(s) salvo(s) offline...`);
@@ -1070,7 +1037,7 @@ export default function App() {
 
   // Garante a existência do estagiário "TEste" para testes do usuário
   useEffect(() => {
-    if (BRANDING.id === 'porto-terapia' && user && user.user_metadata?.role === 'supervisor' && internsLoaded) {
+    if (BRANDING.ensureTestIntern && user && user.user_metadata?.role === 'supervisor' && internsLoaded) {
       const hasTest = interns.some(i => i.name.toLowerCase() === 'teste');
       if (!hasTest) {
         supabase.rpc('create_intern_user', {
@@ -1334,6 +1301,11 @@ export default function App() {
         email = typed.toLowerCase();
       } else {
         const resolvedKey = resolveAdminKey(typed);
+        if (typed && !resolvedKey) {
+          setLoginError('Usuário não encontrado neste sistema. Se o seu acesso é do outro grupo, saia deste site e entre no sistema correspondente.');
+          setGpsLoading(false);
+          return;
+        }
         email = (resolvedKey && ADMIN_USERS[resolvedKey]?.email)
           || (typed ? `${normalizeLogin(ADMIN_ALIASES[normalizeLogin(typed)] || typed)}@${BRANDING.fallbackInternEmailDomain || 'portoterapia.com'}` : ADMIN_USERS[DEFAULT_ADMIN_KEY]?.email);
       }
@@ -1351,7 +1323,11 @@ export default function App() {
 
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
-          setLoginError('Senha incorreta.');
+          setLoginError(
+            selectedLoginOption === 'supervisor' && (loginAdminName || '').includes('@')
+              ? 'Usuário ou senha incorretos neste sistema. Se o seu acesso é do outro grupo, saia deste site e entre no sistema correspondente.'
+              : 'Senha incorreta.'
+          );
         } else {
           setLoginError('Erro ao fazer login: ' + error.message);
         }
@@ -1844,8 +1820,8 @@ export default function App() {
   }, []);
 
   const runAutomaticBackupCheck = useCallback(async () => {
-    const configStorageKey = `app_configuracoes_${BRANDING.id || 'porto-terapia'}`;
-    const backupDateStorageKey = `${BRANDING.id || 'porto-terapia'}_last_backup_date`;
+    const configStorageKey = `app_configuracoes_${BRANDING.id}`;
+    const backupDateStorageKey = `${BRANDING.id}_last_backup_date`;
     const savedConfig = localStorage.getItem(configStorageKey);
     if (!savedConfig) return;
     const config = JSON.parse(savedConfig);
@@ -2295,7 +2271,7 @@ export default function App() {
       console.error('Erro ao salvar:', error);
       if (error.message && (error.message.includes('Failed to fetch') || error.message.includes('Network') || error.message.includes('fetch'))) {
         toast.info('O ponto foi salvo offline e será sincronizado quando houver internet.');
-        const offlineStorageKey = `offline_records_${BRANDING.id || 'porto-terapia'}`;
+        const offlineStorageKey = `offline_records_${BRANDING.id}`;
         const offlineRecords = JSON.parse(localStorage.getItem(offlineStorageKey) || '[]');
         offlineRecords.push(newRecord);
         localStorage.setItem(offlineStorageKey, JSON.stringify(offlineRecords));
@@ -3180,7 +3156,7 @@ export default function App() {
                       autoCorrect="off"
                       autoCapitalize="off"
                       spellCheck="false"
-                      placeholder="Ex: silvania ou silvania@portoterapia.com"
+                      placeholder={`Ex: ${Object.keys(ADMIN_USERS)[0]} ou ${Object.values(ADMIN_USERS)[0]?.email || 'nome@dominio'}`}
                       value={loginAdminName}
                       onChange={(e) => { setLoginAdminName(e.target.value); setLoginError(''); }}
                       className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs"
@@ -3353,7 +3329,7 @@ export default function App() {
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-dashed border-slate-300 space-y-2">
-                    {BRANDING.id === 'grupoib' && (
+                    {BRANDING.showPublicPayrollUpload && (
                       <button
                         type="button"
                         disabled={isProcessingProfile !== null}
@@ -3862,7 +3838,7 @@ export default function App() {
           </div>
         </div>
         <div className="mt-4 flex flex-col items-center gap-2">
-          {BRANDING.id === 'grupoib' && (
+          {BRANDING.showPublicPayrollUpload && (
             <button
               type="button"
               onClick={() => setShowPublicPayrollModal(true)}
@@ -5856,7 +5832,7 @@ export default function App() {
     let localUnitConfig = {};
     if (targetUnitId) {
       try {
-        const savedU = localStorage.getItem(`unit_config_${BRANDING.id || 'porto-terapia'}_${targetUnitId}`);
+        const savedU = localStorage.getItem(`unit_config_${BRANDING.id}_${targetUnitId}`);
         if (savedU) localUnitConfig = JSON.parse(savedU);
       } catch { /* ignore */ }
     }
@@ -8555,8 +8531,8 @@ export default function App() {
       { id: 'freelance_conformidade',  label: 'Conformidade', icon: Scale },
     ];
 
-    const showTalentBank = WORKSPACES[adminWorkspace]?.showTalentBankModule ?? BRANDING.showTalentBankModule;
-    const showFinanceModule = WORKSPACES[adminWorkspace]?.showFinanceModule ?? BRANDING.showFinanceModule ?? true;
+    const showTalentBank = BRANDING.showTalentBankModule;
+    const showFinanceModule = BRANDING.showFinanceModule ?? true;
     const commonNavItems = [
       { id: 'aniversariantes', label: 'Aniversariantes', icon: Cake },
       ...(showFinanceModule ? [{ id: 'financeiro', label: 'Financeiro & Folhas', icon: Wallet }] : []),
@@ -8684,30 +8660,6 @@ export default function App() {
 
           {/* Filtro de Unidade & Ações Rápidas */}
           <div className={`p-3 ${c ? 'md:px-2' : ''} bg-white/40 border-b border-slate-200/80 space-y-2 shrink-0`}>
-            {canSwitchWorkspace && (
-              <div>
-                <label className={`text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-1 ${c ? 'md:hidden' : ''}`}>
-                  Grupo de Unidades
-                </label>
-                <div className={`grid grid-cols-2 gap-1.5 ${c ? 'md:grid-cols-1' : ''}`}>
-                  {Object.values(WORKSPACES).map((ws) => (
-                    <button
-                      key={ws.id}
-                      type="button"
-                      onClick={() => { setAdminWorkspace(ws.id); setFilterUnit('all'); }}
-                      title={ws.displayName}
-                      className={`text-[11px] font-semibold py-1.5 rounded-lg border transition-colors truncate ${
-                        adminWorkspace === ws.id
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-slate-600 border-slate-200 hover:border-blue-400'
-                      }`}
-                    >
-                      {c ? (<><span className="md:hidden">{ws.displayName}</span><span className="hidden md:inline">{railInitials(ws.displayName)}</span></>) : ws.displayName}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
             {showModuleToggle && (
               <div>
                 <label className={`text-[10px] uppercase tracking-wider font-bold text-slate-400 block mb-1 ${c ? 'md:hidden' : ''}`}>
@@ -8865,65 +8817,65 @@ export default function App() {
                 }>
                   {(visitedAdminTabs.has('dashboard') || activeAdminTab === 'dashboard') && (
                   <div style={{ display: activeAdminTab === 'dashboard' ? 'block' : 'none' }}>
-                    <DashboardTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} isActive={activeAdminTab === 'dashboard'} />
+                    <DashboardTab filterUnit={effectiveFilterUnit} isActive={activeAdminTab === 'dashboard'} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('frequencia') || activeAdminTab === 'frequencia') && (
                   <div style={{ display: activeAdminTab === 'frequencia' ? 'block' : 'none' }}>
-                    <FrequenciaTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} />
+                    <FrequenciaTab filterUnit={effectiveFilterUnit} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('escala') || activeAdminTab === 'escala') && (
                   <div style={{ display: activeAdminTab === 'escala' ? 'block' : 'none' }}>
-                    <EscalaTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} />
+                    <EscalaTab filterUnit={effectiveFilterUnit} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('estagiarios') || activeAdminTab === 'estagiarios') && (
                   <div style={{ display: activeAdminTab === 'estagiarios' ? 'block' : 'none' }}>
-                    <EstagiariosTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} />
+                    <EstagiariosTab filterUnit={effectiveFilterUnit} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('acompanhamento') || activeAdminTab === 'acompanhamento') && (
                   <div style={{ display: activeAdminTab === 'acompanhamento' ? 'block' : 'none' }}>
-                    <AcompanhamentoTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} />
+                    <AcompanhamentoTab filterUnit={effectiveFilterUnit} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('ocorrencias') || activeAdminTab === 'ocorrencias') && (
                   <div style={{ display: activeAdminTab === 'ocorrencias' ? 'block' : 'none' }}>
-                    <OcorrenciasTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} />
+                    <OcorrenciasTab filterUnit={effectiveFilterUnit} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('finalizacao') || activeAdminTab === 'finalizacao') && (
                   <div style={{ display: activeAdminTab === 'finalizacao' ? 'block' : 'none' }}>
-                    <EncerramentoTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} onPrintDocument={handlePrintDocument} />
+                    <EncerramentoTab filterUnit={effectiveFilterUnit} onPrintDocument={handlePrintDocument} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('documentos') || activeAdminTab === 'documentos') && (
                   <div style={{ display: activeAdminTab === 'documentos' ? 'block' : 'none' }}>
-                    <DocumentosTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} onPrintDocument={handlePrintDocument} />
+                    <DocumentosTab filterUnit={effectiveFilterUnit} onPrintDocument={handlePrintDocument} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('admissional') || activeAdminTab === 'admissional') && (
                   <div style={{ display: activeAdminTab === 'admissional' ? 'block' : 'none' }}>
-                    <DossieTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} />
+                    <DossieTab filterUnit={effectiveFilterUnit} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('rh') || activeAdminTab === 'rh') && (
                   <div style={{ display: activeAdminTab === 'rh' ? 'block' : 'none' }}>
-                    <AlertasRhTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} onGenerateMinuta={setViewingMinutaIntern} />
+                    <AlertasRhTab filterUnit={effectiveFilterUnit} onGenerateMinuta={setViewingMinutaIntern} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('aniversariantes') || activeAdminTab === 'aniversariantes') && (
                   <div style={{ display: activeAdminTab === 'aniversariantes' ? 'block' : 'none' }}>
-                    <AniversariantesTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} />
+                    <AniversariantesTab filterUnit={effectiveFilterUnit} />
                   </div>
                   )}
-                  {(WORKSPACES[adminWorkspace]?.showFinanceModule ?? BRANDING.showFinanceModule ?? true) && (visitedAdminTabs.has('financeiro') || activeAdminTab === 'financeiro') && (
+                  {(BRANDING.showFinanceModule ?? true) && (visitedAdminTabs.has('financeiro') || activeAdminTab === 'financeiro') && (
                     <div style={{ display: activeAdminTab === 'financeiro' ? 'block' : 'none' }}>
-                      <FinanceiroTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} />
+                      <FinanceiroTab filterUnit={effectiveFilterUnit} />
                     </div>
                   )}
-                  {(WORKSPACES[adminWorkspace]?.showTalentBankModule ?? BRANDING.showTalentBankModule) && (visitedAdminTabs.has('banco_talentos') || activeAdminTab === 'banco_talentos') && (
+                  {BRANDING.showTalentBankModule && (visitedAdminTabs.has('banco_talentos') || activeAdminTab === 'banco_talentos') && (
                     <div style={{ display: activeAdminTab === 'banco_talentos' ? 'block' : 'none' }}>
                       <BancoTalentosTab units={visibleUnits} />
                     </div>
@@ -8935,97 +8887,97 @@ export default function App() {
                   )}
                   {(visitedAdminTabs.has('pj_dashboard') || activeAdminTab === 'pj_dashboard') && (
                   <div style={{ display: activeAdminTab === 'pj_dashboard' ? 'block' : 'none' }}>
-                    <DashboardProfissionaisTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} isActive={activeAdminTab === 'pj_dashboard'} />
+                    <DashboardProfissionaisTab filterUnit={effectiveFilterUnit} isActive={activeAdminTab === 'pj_dashboard'} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('pj_profissionais') || activeAdminTab === 'pj_profissionais') && (
                   <div style={{ display: activeAdminTab === 'pj_profissionais' ? 'block' : 'none' }}>
-                    <ProfissionaisTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} units={visibleUnits} />
+                    <ProfissionaisTab filterUnit={effectiveFilterUnit} units={visibleUnits} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('pj_presenca') || activeAdminTab === 'pj_presenca') && (
                   <div style={{ display: activeAdminTab === 'pj_presenca' ? 'block' : 'none' }}>
-                    <PresencaProfissionaisTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} units={visibleUnits} />
+                    <PresencaProfissionaisTab filterUnit={effectiveFilterUnit} units={visibleUnits} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('pj_producao') || activeAdminTab === 'pj_producao') && (
                   <div style={{ display: activeAdminTab === 'pj_producao' ? 'block' : 'none' }}>
-                    <ProducaoProfissionaisTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} units={visibleUnits} />
+                    <ProducaoProfissionaisTab filterUnit={effectiveFilterUnit} units={visibleUnits} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('pj_documentos') || activeAdminTab === 'pj_documentos') && (
                   <div style={{ display: activeAdminTab === 'pj_documentos' ? 'block' : 'none' }}>
-                    <DocumentosProfissionaisTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} units={units} branding={BRANDING} />
+                    <DocumentosProfissionaisTab filterUnit={effectiveFilterUnit} units={units} branding={BRANDING} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('clt_dashboard') || activeAdminTab === 'clt_dashboard') && (
                   <div style={{ display: activeAdminTab === 'clt_dashboard' ? 'block' : 'none' }}>
-                    <DashboardFuncionariosTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} isActive={activeAdminTab === 'clt_dashboard'} />
+                    <DashboardFuncionariosTab filterUnit={effectiveFilterUnit} isActive={activeAdminTab === 'clt_dashboard'} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('clt_funcionarios') || activeAdminTab === 'clt_funcionarios') && (
                   <div style={{ display: activeAdminTab === 'clt_funcionarios' ? 'block' : 'none' }}>
-                    <FuncionariosTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} units={visibleUnits} />
+                    <FuncionariosTab filterUnit={effectiveFilterUnit} units={visibleUnits} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('clt_dossie') || activeAdminTab === 'clt_dossie') && (
                   <div style={{ display: activeAdminTab === 'clt_dossie' ? 'block' : 'none' }}>
-                    <DossieFuncionariosTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} />
+                    <DossieFuncionariosTab filterUnit={effectiveFilterUnit} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('clt_documentos') || activeAdminTab === 'clt_documentos') && (
                   <div style={{ display: activeAdminTab === 'clt_documentos' ? 'block' : 'none' }}>
-                    <DocumentosFuncionariosTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} units={visibleUnits} />
+                    <DocumentosFuncionariosTab filterUnit={effectiveFilterUnit} units={visibleUnits} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('clt_ponto') || activeAdminTab === 'clt_ponto') && (
                   <div style={{ display: activeAdminTab === 'clt_ponto' ? 'block' : 'none' }}>
-                    <PontoFuncionariosTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} units={visibleUnits} />
+                    <PontoFuncionariosTab filterUnit={effectiveFilterUnit} units={visibleUnits} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('clt_apuracao') || activeAdminTab === 'clt_apuracao') && (
                   <div style={{ display: activeAdminTab === 'clt_apuracao' ? 'block' : 'none' }}>
-                    <ApuracaoFuncionariosTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} units={visibleUnits} />
+                    <ApuracaoFuncionariosTab filterUnit={effectiveFilterUnit} units={visibleUnits} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('clt_ferias') || activeAdminTab === 'clt_ferias') && (
                   <div style={{ display: activeAdminTab === 'clt_ferias' ? 'block' : 'none' }}>
-                    <FeriasTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} units={visibleUnits} />
+                    <FeriasTab filterUnit={effectiveFilterUnit} units={visibleUnits} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('clt_saude') || activeAdminTab === 'clt_saude') && (
                   <div style={{ display: activeAdminTab === 'clt_saude' ? 'block' : 'none' }}>
-                    <SaudeOcupacionalTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} />
+                    <SaudeOcupacionalTab filterUnit={effectiveFilterUnit} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('clt_ocorrencias') || activeAdminTab === 'clt_ocorrencias') && (
                   <div style={{ display: activeAdminTab === 'clt_ocorrencias' ? 'block' : 'none' }}>
-                    <OcorrenciasFuncionariosTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} units={visibleUnits} />
+                    <OcorrenciasFuncionariosTab filterUnit={effectiveFilterUnit} units={visibleUnits} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('clt_encerramento') || activeAdminTab === 'clt_encerramento') && (
                   <div style={{ display: activeAdminTab === 'clt_encerramento' ? 'block' : 'none' }}>
-                    <EncerramentoFuncionariosTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} units={visibleUnits} />
+                    <EncerramentoFuncionariosTab filterUnit={effectiveFilterUnit} units={visibleUnits} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('clt_alertas') || activeAdminTab === 'clt_alertas') && (
                   <div style={{ display: activeAdminTab === 'clt_alertas' ? 'block' : 'none' }}>
-                    <AlertasFuncionariosTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} />
+                    <AlertasFuncionariosTab filterUnit={effectiveFilterUnit} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('freelance_freelancers') || activeAdminTab === 'freelance_freelancers') && (
                   <div style={{ display: activeAdminTab === 'freelance_freelancers' ? 'block' : 'none' }}>
-                    <FreelancersTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} units={visibleUnits} />
+                    <FreelancersTab filterUnit={effectiveFilterUnit} units={visibleUnits} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('freelance_trabalhos') || activeAdminTab === 'freelance_trabalhos') && (
                   <div style={{ display: activeAdminTab === 'freelance_trabalhos' ? 'block' : 'none' }}>
-                    <FreelanceJobsTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} units={visibleUnits} />
+                    <FreelanceJobsTab filterUnit={effectiveFilterUnit} units={visibleUnits} />
                   </div>
                   )}
                   {(visitedAdminTabs.has('freelance_conformidade') || activeAdminTab === 'freelance_conformidade') && (
                   <div style={{ display: activeAdminTab === 'freelance_conformidade' ? 'block' : 'none' }}>
-                    <ConformidadeFreelanceTab filterUnit={effectiveFilterUnit} restrictedUnitIds={restrictedUnitIds} />
+                    <ConformidadeFreelanceTab filterUnit={effectiveFilterUnit} />
                   </div>
                   )}
                 </Suspense>

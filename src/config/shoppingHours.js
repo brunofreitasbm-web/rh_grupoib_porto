@@ -1,6 +1,7 @@
+import { BRANDING } from './branding';
 // Horário de funcionamento dos shoppings: seg a sáb 10h–22h, domingo 12h–22h.
 // Unidades que não são shopping (ex.: clínica) não têm horário aqui.
-export const SHOPPING_UNIT_IDS = ['faca-amigos-parque-shopping', 'faca-amigos-grao-para'];
+export const SHOPPING_UNIT_IDS = BRANDING.shoppingUnitIds || [];
 
 const WEEK = { open: 10, close: 22 };
 const SUNDAY = { open: 12, close: 22 };

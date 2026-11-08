@@ -1,0 +1,187 @@
+// Branding do workspace Grupo IB (FaçaAmigos). Este arquivo só entra no bundle do
+// deploy IB (alias @workspace-branding em vite.config.js), então nada da Porto
+// Terapia chega ao navegador deste site.
+export const WORKSPACE_BRANDING = {
+  id: 'grupoib',
+  appTitle: 'FaçaAmigos • Gestão de Pessoas',
+  shortName: 'FaçaAmigos',
+  themeColor: '#0f766e',
+  // Kit de marca FaçaAmigos (vetorizado) — ver public/brand/README de origem
+  // em Projetos/Clinica/brand. Usa o símbolo isolado (sem wordmark) porque
+  // as telas do app exibem o logo em caixas pequenas/quadradas (h-10 a h-16
+  // com w-auto) — a versão horizontal com texto ficava cortada nesse espaço.
+  logoPath: '/brand/facaamigos-simbolo.svg',
+  logoType: 'image/svg+xml',
+  faviconPath: '/brand/facaamigos-simbolo.svg',
+  faviconType: 'image/svg+xml',
+  logoAlt: 'Símbolo FaçaAmigos',
+  // Subtítulo mostrado abaixo do nome na tela de login (ver App.jsx).
+  subtitle: 'Gestão de Pessoas',
+  loginSubtitle: 'Gestão de Pessoas',
+  displayName: 'FaçaAmigos',
+  // Sobrescreve a paleta "blue" do Tailwind pela paleta "teal" (verde-água)
+  // só neste build — todo o app usa classes bg-blue-*/text-blue-*/etc. como
+  // cor de marca; isso recolore a UI inteira sem precisar tocar em cada
+  // componente. Ver tailwind.config.js.
+  tailwindBlueOverride: {
+    50: '#f0fdfa', 100: '#ccfbf1', 200: '#99f6e4', 300: '#5eead4', 400: '#2dd4bf',
+    500: '#14b8a6', 600: '#0d9488', 700: '#0f766e', 800: '#115e59', 900: '#134e4a', 950: '#042f2e',
+  },
+  legalEntityName: 'Razão social do FaçaAmigos Gestão de Pessoas (pendente)',
+  legalEntityShort: 'FaçaAmigos',
+  documentTagline: 'Unidades e Serviços de Saúde FaçaAmigos',
+  documentLocation: 'Belém - PA',
+  contactEmail: 'contato@grupoib.com.br',
+  rhEmail: 'rh@grupoib.com.br',
+  cnpj: '00.000.000/0001-00',
+  phone: '(91) 99999-0000',
+  showSupervisionChat: false,
+  // Unidades em shopping (horário de funcionamento próprio, ver shoppingHours.js).
+  shoppingUnitIds: ['faca-amigos-parque-shopping', 'faca-amigos-grao-para'],
+  ensureTestIntern: false,
+  // Upload público de holerites (botão na tela de login).
+  showPublicPayrollUpload: true,
+  fallbackInternEmailDomain: 'grupoib.internal',
+  // Módulo de Profissionais PJ (prestadores de serviço) — ver ProfessionalKiosk.jsx.
+  // Vocabulário e regras deliberadamente distintos do estágio, para não sugerir
+  // vínculo empregatício (ver seção 1 do plano de implementação do módulo).
+  showProfessionalsModule: true,
+  professionalTermsVersion: '1.0',
+  professionalLabels: {
+    singular: 'Prestador(a)',
+    plural: 'Profissionais PJ',
+    presence: 'Registro de Presença',
+    production: 'Apuração de Produção',
+  },
+  professionalTermsText:
+    'Este registro de presença serve exclusivamente para organização de agenda, ' +
+    'segurança do local e conferência dos serviços prestados para fins de faturamento. ' +
+    'Ele não constitui, e não deve ser interpretado como, controle de jornada de trabalho, ' +
+    'ponto eletrônico ou qualquer forma de subordinação, sendo seu uso facultativo e ' +
+    'autodeclarado pelo(a) próprio(a) prestador(a) de serviços, no âmbito do contrato de ' +
+    'prestação de serviços firmado com a empresa.',
+  // Autocadastro de Profissionais PJ (ver ProfessionalSelfRegistration.jsx)
+  // — o próprio prestador preenche seu cadastro completo (dados da PJ,
+  // habilitação, representante legal e anexos) sem estar logado, nascendo
+  // 'pending_validation' até o RH validar. Ver seção 18 de supabase_schema.sql.
+  showProfessionalSelfRegistration: true,
+  autonomyDeclarationVersion: '1.0',
+  // Aceite obrigatório e versionado, separado do consentimento LGPD — é a
+  // peça central da blindagem de vínculo trabalhista deste módulo.
+  autonomyDeclarationText:
+    'Declaro, para os fins do contrato de prestação de serviços a ser firmado, que atuo com ' +
+    'plena autonomia técnica e organizacional na execução dos serviços, sem subordinação, ' +
+    'pessoalidade ou habitualidade em relação à contratante; que defino livremente minha agenda ' +
+    'e forma de atendimento; que posso me fazer substituir por preposto(a) habilitado(a); que não ' +
+    'atendo a esta contratante em regime de exclusividade; e que sou responsável pelos tributos, ' +
+    'encargos previdenciários e obrigações civis decorrentes da minha atividade como pessoa ' +
+    'jurídica. Este cadastro e o contrato dele decorrente têm natureza exclusivamente civil, sem ' +
+    'qualquer vínculo empregatício com a contratante.',
+  // Cláusulas padrão do contrato de prestação de serviços pré-preenchido
+  // (ver ./utils/professionalContract.js); cada unidade pode complementar
+  // com units.contrato_pj_custom_text.
+  contractDefaultClauses:
+    '[MINUTA GERADA AUTOMATICAMENTE — SUJEITA A REVISÃO JURÍDICA ANTES DA ASSINATURA.]',
+  // Módulo de Funcionários CLT (empregados) — ver EmployeeKiosk.jsx. Ligado
+  // no Grupo IB: terceiro tipo de vínculo do hub de RH, ao lado de
+  // Estagiários e Profissionais PJ. Ao contrário do PJ, este módulo se
+  // aproxima deliberadamente de controle de jornada (Portaria MTP 671/2021).
+  showEmployeesModule: true,
+  biometricConsentVersion: '1.0',
+  // Autocadastro de Funcionários CLT (ver EmployeeSelfRegistration.jsx) — o
+  // próprio candidato preenche dados pessoais/documentais e a biometria
+  // facial (captura ao vivo com liveness, mesmo componente da Autogestão de
+  // Biometria do estagiário) sem estar logado, nascendo 'pending_validation'
+  // até o RH validar e completar cargo/salário/contrato/admissão. Ver
+  // seção 19 de supabase_schema.sql.
+  showEmployeeSelfRegistration: true,
+  employeeLgpdConsentVersion: '1.0',
+  employeeLabels: {
+    singular: 'Funcionário(a)',
+    plural: 'Funcionários CLT',
+    timesheet: 'Ponto Eletrônico',
+  },
+  // Módulo Freelance (trabalhos pontuais) — quarta categoria de vínculo do
+  // hub, ao lado de Estagiários/Profissionais PJ/Funcionários CLT. Ligado
+  // no Grupo IB. Ver src/config/freelanceConstants.js para o enquadramento
+  // legal (autônomo pessoa física por escopo, sem quiosque/PIN/presença) e
+  // supabase/migrations/20260927100000_freelance_module.sql para o schema.
+  showFreelanceModule: true,
+  freelanceLabels: {
+    singular: 'Freelancer',
+    plural: 'Freelancers',
+    jobs: 'Trabalhos (OS)',
+  },
+  // Contas 'supervisor' deste site: somente Bruno e Isabella. Este banco é
+  // independente do da Porto Terapia, então as contas existem só aqui.
+  // Tela de Usuários do Sistema (ver seção 21 de supabase_schema.sql). Ligada
+  // no Grupo IB: o hub tem 3 módulos e várias unidades, então as contas de
+  // painel e de quiosque precisam ser geridas pela própria UI, e não por
+  // blocos SQL rodados à mão.
+  showSystemUsersModule: true,
+  // Candidatos captados pelo Banco de Talentos do app Faça Amigos (módulo
+  // gerencial, projeto Supabase separado) — ver supabase/functions/fetch-talent-bank.
+  showTalentBankModule: true,
+  // Levantamento de Perfil Comportamental (DISC) para equipe
+  showStaffDiscAssessment: true,
+  adminUsers: {
+    bruno: { label: 'Bruno', email: 'bruno@portoterapia.com' },
+    isabella: { label: 'Isabella', email: 'isabella@portoterapia.com' },
+  },
+  kioskUnits: [
+    {
+      id: 'faca-amigos-parque-shopping',
+      talentCode: 'PARQUE_SHOPPING',
+      name: 'FaçaAmigos Parque Shopping',
+      workspaceId: 'grupoib',
+      buttonLabel: 'Estagiários - FaçaAmigos Parque Shopping',
+      loginLabel: 'Estagiário - FaçaAmigos Parque Shopping',
+      kioskEmail: 'parqueshopping@grupoib.internal',
+      professionalButtonLabel: 'Profissionais PJ - FaçaAmigos Parque Shopping',
+      professionalKioskEmail: 'pj-parqueshopping@grupoib.internal',
+      employeeButtonLabel: 'Funcionários CLT - FaçaAmigos Parque Shopping',
+      employeeKioskEmail: 'clt-parqueshopping@grupoib.internal',
+      razaoSocial: 'Faça Amigos Parque Shopping Serviços Médicos LTDA',
+      cnpj: '00.000.000/0001-01',
+      address: 'Rod. Augusto Montenegro, 4300 - Parque Shopping, Belém - PA',
+      phone: '(91) 99111-1001',
+      accent: 'emerald',
+    },
+    {
+      id: 'faca-amigos-grao-para',
+      talentCode: 'BOSQUE_GRAO_PARA',
+      name: 'FaçaAmigos Grão Pará',
+      workspaceId: 'grupoib',
+      buttonLabel: 'Estagiários - FaçaAmigos Grão Pará',
+      loginLabel: 'Estagiário - FaçaAmigos Grão Pará',
+      kioskEmail: 'graopara@grupoib.internal',
+      professionalButtonLabel: 'Profissionais PJ - FaçaAmigos Grão Pará',
+      professionalKioskEmail: 'pj-graopara@grupoib.internal',
+      employeeButtonLabel: 'Funcionários CLT - FaçaAmigos Grão Pará',
+      employeeKioskEmail: 'clt-graopara@grupoib.internal',
+      razaoSocial: 'Faça Amigos Grão Pará Serviços Médicos LTDA',
+      cnpj: '00.000.000/0001-02',
+      address: 'Av. Centenário, 1050 - Shopping Bosque Grão Pará, Belém - PA',
+      phone: '(91) 99111-1002',
+      accent: 'indigo',
+    },
+    {
+      id: 'clinica-a',
+      talentCode: 'CLINICA_FATIMA',
+      name: 'FaçaAmigos, Centro de Terapia Comportamental',
+      workspaceId: 'grupoib',
+      buttonLabel: 'Estagiários - FaçaAmigos, Centro de Terapia Comportamental',
+      loginLabel: 'Estagiário - FaçaAmigos, Centro de Terapia Comportamental',
+      kioskEmail: 'clinicaa@grupoib.internal',
+      professionalButtonLabel: 'Profissionais PJ - FaçaAmigos, Centro de Terapia Comportamental',
+      professionalKioskEmail: 'pj-clinicaa@grupoib.internal',
+      employeeButtonLabel: 'Funcionários CLT - FaçaAmigos, Centro de Terapia Comportamental',
+      employeeKioskEmail: 'clt-clinicaa@grupoib.internal',
+      razaoSocial: 'INSTITUTO FACA AMIGOS LTDA',
+      cnpj: '22.161.197/0001-83',
+      address: 'R. Boaventura da Silva, 1573 - Umarizal, Belém - PA, CEP 66.060-147',
+      phone: '(91) 8250-1215',
+      accent: 'amber',
+    },
+  ],
+};
