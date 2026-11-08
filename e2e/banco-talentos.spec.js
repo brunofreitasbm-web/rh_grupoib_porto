@@ -117,7 +117,7 @@ test.describe('Banco de Talentos - Separação por Unidade', () => {
         const k = localStorage.key(i);
         if (k && k.endsWith('-auth-token')) localStorage.setItem(k, JSON.stringify(mockSession));
       }
-      localStorage.setItem('sb-vththexblpxwocbowhsv-auth-token', JSON.stringify(mockSession));
+      localStorage.setItem('sb-grupoib-auth-token', JSON.stringify(mockSession));
     });
 
     await page.goto('/');

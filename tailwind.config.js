@@ -1,5 +1,8 @@
 import { loadEnv } from 'vite';
-import { WORKSPACES } from './src/config/branding.js';
+import { WORKSPACE_BRANDING as PORTO } from './src/config/branding.porto.js';
+import { WORKSPACE_BRANDING as GRUPOIB } from './src/config/branding.grupoib.js';
+
+const WORKSPACES = { 'porto-terapia': PORTO, grupoib: GRUPOIB };
 
 // Roda em Node (fora do bundler), por isso lê VITE_WORKSPACE_ID via
 // process.env (Vercel/Netlify injetam as env vars do dashboard assim) com

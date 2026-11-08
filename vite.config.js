@@ -1,15 +1,36 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
-import { WORKSPACES } from './src/config/branding.js';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { WORKSPACE_BRANDING as PORTO } from './src/config/branding.porto.js';
+import { WORKSPACE_BRANDING as GRUPOIB } from './src/config/branding.grupoib.js';
+
+const WORKSPACES = { 'porto-terapia': PORTO, grupoib: GRUPOIB };
+const WORKSPACE_FILES = { 'porto-terapia': 'branding.porto.js', grupoib: 'branding.grupoib.js' };
+const here = path.dirname(fileURLToPath(import.meta.url));
 
 // Roda em Node (não passa pelo bundler), por isso lê VITE_WORKSPACE_ID via
 // loadEnv/process.env em vez de import.meta.env — ver src/config/branding.js.
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const branding = WORKSPACES[env.VITE_WORKSPACE_ID] || WORKSPACES['porto-terapia'];
+  const workspaceId = process.env.VITE_WORKSPACE_ID || env.VITE_WORKSPACE_ID;
+  const resolvedId = WORKSPACES[workspaceId] ? workspaceId : 'porto-terapia';
+  const branding = WORKSPACES[resolvedId];
 
   return {
+    resolve: {
+      // Cada build enxerga só o branding do próprio workspace (ver src/config/branding.js).
+      alias: {
+        '@workspace-branding': path.resolve(here, 'src/config', WORKSPACE_FILES[resolvedId]),
+      },
+    },
+    define: {
+      // Módulos exclusivos de um workspace saem do bundle do outro (dead-code elimination).
+      __PJ_MODULE_ENABLED__: JSON.stringify(Boolean(branding.showProfessionalsModule)),
+      __FREELANCE_MODULE_ENABLED__: JSON.stringify(Boolean(branding.showFreelanceModule)),
+      __TALENT_BANK_ENABLED__: JSON.stringify(Boolean(branding.showTalentBankModule)),
+    },
     plugins: [
       react(),
       VitePWA({

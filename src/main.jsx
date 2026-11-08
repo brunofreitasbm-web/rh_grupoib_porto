@@ -13,7 +13,9 @@ import { consumeHubSsoTicket } from './utils/hubSso';
 // continua navegando por estado (App.jsx), sem react-router — ver
 // src/components/tabs/BancoTalentosTab.jsx e src/components/DiscAssessmentPage.jsx.
 const DiscAssessmentPage = lazyWithRetry(() => import('./components/DiscAssessmentPage.jsx'));
-const PjInvoiceUploadPage = lazyWithRetry(() => import('./components/PjInvoiceUploadPage.jsx'));
+const PjInvoiceUploadPage = __PJ_MODULE_ENABLED__
+  ? lazyWithRetry(() => import('./components/PjInvoiceUploadPage.jsx'))
+  : () => null;
 
 import { registerSW } from 'virtual:pwa-register';
 

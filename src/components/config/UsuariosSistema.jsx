@@ -607,7 +607,7 @@ export default function UsuariosSistema({ units = [], currentUserId = null }) {
                     disabled={!!form.id}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500"
-                    placeholder="maria@grupoib.com.br"
+                    placeholder="nome@exemplo.com"
                   />
                   {form.id && (
                     <p className="text-[11px] text-slate-400 mt-1">

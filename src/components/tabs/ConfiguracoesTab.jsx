@@ -62,19 +62,8 @@ export default function ConfiguracoesTab({ userRole = 'admin', units = [], onSav
     workspaceId: ku.workspaceId || BRANDING.id,
   }));
 
-  const availableUnits = rawAvailableUnits.filter((u) => {
-    const uId = (u.id || '').toLowerCase();
-    const uName = (u.name || u.nome || '').toLowerCase();
-    const isTargetHidden = uId.includes('antonio-barreto') || uId.includes('generalissimo') || uName.includes('antônio barreto') || uName.includes('generalíssimo');
-    const uWs = u.workspaceId || u.workspace_id;
-    if (BRANDING.id === 'grupoib' && (isTargetHidden || uWs === 'porto-terapia')) {
-      return false;
-    }
-    if (BRANDING.id === 'porto-terapia' && uWs === 'grupoib') {
-      return false;
-    }
-    return true;
-  });
+  // Este build só conhece as unidades do próprio workspace (banco independente).
+  const availableUnits = rawAvailableUnits;
 
   useEffect(() => {
     const unitMap = {};
@@ -97,7 +86,7 @@ export default function ConfiguracoesTab({ userRole = 'admin', units = [], onSav
         geofenceRequired: u.geofenceRequired !== undefined ? u.geofenceRequired : (u.geofence_required === true),
         lat: u.lat !== undefined ? u.lat : (u.latitude || 0),
         lng: u.lng !== undefined ? u.lng : (u.longitude || 0),
-        workspaceId: u.workspaceId || u.workspace_id || (['antonio-barreto', 'generalissimo'].includes(u.id) ? 'porto-terapia' : (BRANDING.id || null)),
+        workspaceId: u.workspaceId || u.workspace_id || (BRANDING.id || null),
         kioskEmail: u.kioskEmail || u.kiosk_email || '',
         biometricRequired: u.biometricRequired !== undefined ? u.biometricRequired : (u.biometric_required || false),
         pjEnabled: u.pjEnabled !== undefined ? u.pjEnabled : (u.pj_enabled || false),
@@ -115,7 +104,7 @@ export default function ConfiguracoesTab({ userRole = 'admin', units = [], onSav
   }, [units]);
 
   // Default Settings State
-  const storageKey = `app_configuracoes_${BRANDING.id || 'porto-terapia'}`;
+  const storageKey = `app_configuracoes_${BRANDING.id}`;
 
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem(storageKey);
@@ -688,7 +677,7 @@ export default function ConfiguracoesTab({ userRole = 'admin', units = [], onSav
                                       type="text"
                                       value={uData.pjKioskEmail}
                                       onChange={(e) => handleUnitFieldChange(uData.id, 'pjKioskEmail', e.target.value)}
-                                      placeholder="pj-nomedaunidade@grupoib.internal"
+                                      placeholder={`pj-nomedaunidade@${BRANDING.fallbackInternEmailDomain}`}
                                       className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-teal-500"
                                     />
                                     <p className="text-[10px] text-slate-400 mt-1">Precisa corresponder à conta de quiosque cadastrada no Supabase para esta unidade.</p>
@@ -736,7 +725,7 @@ export default function ConfiguracoesTab({ userRole = 'admin', units = [], onSav
                                       type="text"
                                       value={uData.cltKioskEmail}
                                       onChange={(e) => handleUnitFieldChange(uData.id, 'cltKioskEmail', e.target.value)}
-                                      placeholder="clt-nomedaunidade@grupoib.internal"
+                                      placeholder={`clt-nomedaunidade@${BRANDING.fallbackInternEmailDomain}`}
                                       className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500"
                                     />
                                     <p className="text-[10px] text-slate-400 mt-1">Precisa corresponder à conta de quiosque (papel employee_unit) cadastrada no Supabase para esta unidade.</p>

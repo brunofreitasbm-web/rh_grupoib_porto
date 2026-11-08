@@ -1,12 +1,17 @@
+import { BRANDING } from '../config/branding';
 // "Esqueci minha senha" do supervisor. O código de 6 dígitos e a troca da senha são feitos pela função
 // `recuperar-senha` (projeto A), que fala com o login deste sistema. Aqui só há a chamada e a leitura
 // da resposta: limite de tentativas, validade do código e quem pode recuperar ficam no servidor
 // (que recusa, por exemplo, as contas de unidade do quiosque).
 
-const URL_PADRAO = 'https://ivjvpdzsfjdpyabbzzuj.supabase.co/functions/v1/recuperar-senha';
-
+// Ordem: VITE_RECUPERAR_SENHA_URL > URL definida no branding do workspace (Porto
+// Terapia mantém a função atual) > função `recuperar-senha` do próprio projeto
+// Supabase deste deploy.
 export function urlRecuperarSenha() {
-  return import.meta.env?.VITE_RECUPERAR_SENHA_URL || URL_PADRAO;
+  const env = import.meta.env || {};
+  if (env.VITE_RECUPERAR_SENHA_URL) return env.VITE_RECUPERAR_SENHA_URL;
+  if (BRANDING.recuperarSenhaUrl) return BRANDING.recuperarSenhaUrl;
+  return `${String(env.VITE_SUPABASE_URL || '').replace(/\/$/, '')}/functions/v1/recuperar-senha`;
 }
 
 // Regra de senha da Clínica (a conta é a mesma): 6+ caracteres, uma maiúscula e um caractere especial.

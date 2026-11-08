@@ -1,3 +1,4 @@
+import { BRANDING } from './config/branding';
 import { createClient } from '@supabase/supabase-js';
 import { createAuthAwareFetch } from './utils/authFetch';
 
@@ -58,6 +59,9 @@ export const supabase = createClient(
       fetch: authAwareFetch,
     },
     auth: {
+      // Chave de sessão própria de cada workspace: nenhum token é lido/gravado
+      // no mesmo lugar pelos dois sites, mesmo que um dia compartilhem a origem.
+      storageKey: `sb-${BRANDING.id}-auth-token`,
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
