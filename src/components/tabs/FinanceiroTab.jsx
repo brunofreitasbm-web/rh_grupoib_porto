@@ -144,7 +144,8 @@ export default function FinanceiroTab({ filterUnit, restrictedUnitIds = [] }) {
 
       if (internsData) setInterns(internsData.map(mapInternFromDb).filter(i => !restrictedUnitIds.includes(i.unitId)));
       if (unitsData) setUnits(unitsData.map(mapUnitFromDb).filter(u => !restrictedUnitIds.includes(u.id)));
-      if (recordsData) setRecords(recordsData.map(mapRecordFromDb));
+      const restrictedInternIds = new Set((internsData || []).filter(i => restrictedUnitIds.includes(i.unit_id)).map(i => i.id));
+      if (recordsData) setRecords(recordsData.map(mapRecordFromDb).filter(r => !restrictedUnitIds.includes(r.geo?.unitId) && !restrictedInternIds.has(r.internId)));
 
       if (BRANDING.showProfessionalsModule) {
         const { data: profsData } = await supabase

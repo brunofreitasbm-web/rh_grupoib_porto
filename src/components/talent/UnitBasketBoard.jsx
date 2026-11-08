@@ -49,17 +49,15 @@ function useHiredTeam() {
       if (employeesRes.error) throw employeesRes.error;
       if (assessmentsRes.error) throw assessmentsRes.error;
 
-      const isPortoTerapiaUnit = (unitId) => {
-        if (!unitId) return false;
-        const u = String(unitId).toLowerCase();
-        return u.includes('antonio-barreto') || u.includes('generalissimo') || u.includes('porto-terapia');
-      };
+      // Este site é só da Porto Terapia: só entra na equipe quem está nas unidades dela.
+      const ownUnitIds = new Set((BRANDING.kioskUnits || []).map((k) => k.id));
+      const isOwnUnit = (unitId) => !!unitId && ownUnitIds.has(unitId);
 
       const roster = [
         ...(internsRes.data || []).map((r) => ({ ...r, subjectType: 'intern' })),
         ...(professionalsRes.data || []).map((r) => ({ ...r, subjectType: 'professional' })),
         ...(employeesRes.data || []).map((r) => ({ ...r, subjectType: 'employee' })),
-      ].filter((r) => !isPortoTerapiaUnit(r.unit_id));
+      ].filter((r) => isOwnUnit(r.unit_id));
 
       const assessmentByKey = Object.fromEntries(
         (assessmentsRes.data || []).map((a) => [`${a.subject_type}:${a.subject_id}`, a])

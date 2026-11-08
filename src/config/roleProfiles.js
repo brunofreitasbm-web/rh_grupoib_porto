@@ -125,9 +125,8 @@ export const roleLabel = (roleId) => ROLE_BY_ID[roleId]?.label || roleId;
 // Os dados (nome, accent, endereço) vêm de BRANDING.kioskUnits; shortLabel
 // é o rótulo curto usado no quadro.
 export const SIMULATION_UNITS = [
-  { id: 'faca-amigos-grao-para', shortLabel: 'FaçaAmigos Grão Pará' },
-  { id: 'faca-amigos-parque-shopping', shortLabel: 'FaçaAmigos Parque Shopping' },
-  { id: 'clinica-a', shortLabel: 'FaçaAmigos Clínica (Umarizal)' },
+  { id: 'antonio-barreto', shortLabel: 'Porto Terapia Antônio Barreto' },
+  { id: 'generalissimo', shortLabel: 'Porto Terapia Generalíssimo Deodoro' },
 ];
 
 // Classes Tailwind por accent — escritas por extenso para o scanner JIT.
