@@ -223,8 +223,10 @@ export default function App() {
   // Mantidos em telas totalmente separadas — nenhum componente é compartilhado
   // entre os dois exceto Configurações (ver plano do módulo PJ).
   const [adminModule, setAdminModule] = useState('interns');
-  const [records, setRecords] = useState([]);
-  const [interns, setInterns] = useState([]);
+  // Estado bruto: com escopo "all" o RLS devolve também o Grupo IB. Os valores
+  // usados pela UI (`records`/`interns`) são derivados abaixo, já sem esse grupo.
+  const [rawRecords, setRecords] = useState([]);
+  const [rawInterns, setInterns] = useState([]);
   const [internsLoaded, setInternsLoaded] = useState(false);
   const [units, setUnits] = useState(UNITS_DEFAULT);
   const [isOmnibarOpen, setIsOmnibarOpen] = useState(false);
@@ -459,6 +461,17 @@ export default function App() {
     () => units.filter((u) => u.workspaceId && u.workspaceId !== BRANDING.id).map((u) => u.id),
     [units]
   );
+
+  const interns = useMemo(
+    () => rawInterns.filter((i) => !restrictedUnitIds.includes(i.unitId)),
+    [rawInterns, restrictedUnitIds]
+  );
+
+  const records = useMemo(() => {
+    if (!restrictedUnitIds.length) return rawRecords;
+    const restrictedInternIds = new Set(rawInterns.filter((i) => restrictedUnitIds.includes(i.unitId)).map((i) => i.id));
+    return rawRecords.filter((r) => !restrictedUnitIds.includes(r.geo?.unitId) && !restrictedInternIds.has(r.internId));
+  }, [rawRecords, rawInterns, restrictedUnitIds]);
 
   const visibleUnits = useMemo(
     () => units.filter((u) => {
@@ -1823,11 +1836,15 @@ export default function App() {
       const recordsData = await fetchAllPaged('records', 'id');
       const { data: unitsData } = await supabase.from('units').select('*');
 
+      // Backup da Porto Terapia: com escopo "all" o banco devolve também o Grupo IB.
+      const foreignUnitIds = new Set((unitsData || []).filter((u) => u.workspace_id && u.workspace_id !== BRANDING.id).map((u) => u.id));
+      const ownInterns = (internsData || []).filter((i) => !foreignUnitIds.has(i.unit_id));
+      const foreignInternIds = new Set((internsData || []).filter((i) => foreignUnitIds.has(i.unit_id)).map((i) => i.id));
       const backupObj = {
         exportedAt: new Date().toISOString(),
-        interns: internsData || [],
-        records: recordsData || [],
-        units: unitsData || []
+        interns: ownInterns,
+        records: (recordsData || []).filter((r) => !foreignUnitIds.has(r.geo?.unitId) && !foreignInternIds.has(r.intern_id)),
+        units: (unitsData || []).filter((u) => !foreignUnitIds.has(u.id))
       };
 
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupObj, null, 2));
