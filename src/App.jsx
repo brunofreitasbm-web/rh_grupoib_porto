@@ -453,10 +453,12 @@ export default function App() {
   // "all"), esconde o grupo que não está selecionado no momento no seletor de
   // workspace. Para qualquer outra sessão, o RLS já retornou só as unidades do
   // próprio workspace — não há nada a restringir aqui.
-  const restrictedUnitIds = useMemo(() => {
-    if (!canSwitchWorkspace) return [];
-    return units.filter((u) => u.workspaceId && u.workspaceId !== adminWorkspace).map((u) => u.id);
-  }, [canSwitchWorkspace, units, adminWorkspace]);
+  // Sempre oculta unidades de outro workspace: com escopo "all" o RLS devolve
+  // também as unidades/estagiários do Grupo IB, e as abas filtram por este vetor.
+  const restrictedUnitIds = useMemo(
+    () => units.filter((u) => u.workspaceId && u.workspaceId !== BRANDING.id).map((u) => u.id),
+    [units]
+  );
 
   const visibleUnits = useMemo(
     () => units.filter((u) => {
