@@ -104,7 +104,7 @@ describe('FinanceiroTab', () => {
 
     expect(boundaryRef.current.state.error).toBeNull();
     // Conteúdo real da aba (não o spinner, não a tela de erro do boundary).
-    expect(container.textContent).toContain('Gestão Financeira');
+    expect(container.textContent).toContain('Folha de Estagiários');
     expect(container.textContent).not.toContain('Rendered more hooks');
   });
 });

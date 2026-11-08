@@ -21,16 +21,19 @@ export function minutesToHHMM(totalMinutes) {
   return `${sign}${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
+// Aritmética de datas 'AAAA-MM-DD' sempre em UTC: independe do fuso da
+// máquina e de horário de verão (um dia = 86400000ms exatos).
+const utcMs = (dateStr) => {
+  const [y, m, d] = String(dateStr).slice(0, 10).split('-').map(Number);
+  return Date.UTC(y, m - 1, d);
+};
+
 export function addDays(dateStr, n) {
-  const d = new Date(`${dateStr}T00:00:00`);
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
+  return new Date(utcMs(dateStr) + n * 86400000).toISOString().slice(0, 10);
 }
 
 export function diffDays(a, b) {
-  const da = new Date(`${a}T00:00:00`);
-  const db = new Date(`${b}T00:00:00`);
-  return Math.round((db - da) / 86400000);
+  return Math.round((utcMs(b) - utcMs(a)) / 86400000);
 }
 
 // Chave de data (AAAA-MM-DD) de um timestamp ISO, no fuso America/Belem —
@@ -44,8 +47,10 @@ export function dateKeyBelem(isoTimestamp) {
   return `${map.year}-${map.month}-${map.day}`;
 }
 
+export const todayBelem = () => dateKeyBelem(new Date());
+
 export function weekdayOf(dateStr) {
-  return new Date(`${dateStr}T00:00:00`).getDay(); // 0=domingo ... 6=sábado
+  return new Date(utcMs(dateStr)).getUTCDay(); // 0=domingo ... 6=sábado
 }
 
 // ---------------------------------------------------------------------------
@@ -152,6 +157,12 @@ export function computeWorkedIntervals(marks) {
 
 // Minutos noturnos (22h–5h) e seu equivalente em "hora reduzida" (52min30s =
 // 1h, art. 73 §1 CLT): realMinutes * 60/52.5.
+// A hora é lida em America/Belem (como dateKeyBelem), nunca no fuso da máquina.
+const belemHourFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'America/Belem', hour: '2-digit', hourCycle: 'h23',
+});
+const belemHour = (date) => Number(belemHourFormatter.format(date));
+
 export function nightMinutes(intervals) {
   let realMinutes = 0;
   for (const interval of intervals) {
@@ -159,7 +170,7 @@ export function nightMinutes(intervals) {
     const end = new Date(interval.end);
     while (cursor < end) {
       const next = new Date(Math.min(end.getTime(), cursor.getTime() + 60000));
-      const hour = cursor.getHours();
+      const hour = belemHour(cursor);
       if (hour >= 22 || hour < 5) realMinutes += (next - cursor) / 60000;
       cursor = next;
     }
@@ -192,7 +203,7 @@ export function computeDay({ employee, dateStr, marks, holidays = [], toleranceM
     if (marks.length && expected.start) {
       const firstEntry = marks.find((m) => m.type === 'entrada');
       if (firstEntry) {
-        const scheduled = new Date(`${dateStr}T${expected.start}:00`);
+        const scheduled = new Date(`${dateStr}T${expected.start}:00-03:00`); // horário de Belém
         const actual = new Date(firstEntry.timestamp);
         const delta = (actual - scheduled) / 60000;
         if (delta > toleranceMinutes) lateMinutes = Math.round(delta);
@@ -233,7 +244,7 @@ export function interjornadaViolations(daysWithIntervals) {
   return violations;
 }
 
-export function computeMonth({ employee, records = [], adjustments = [], occurrences = [], holidays = [], monthKey, toleranceMinutes = 5, today = dateKeyBelem(new Date().toISOString()) }) {
+export function computeMonth({ employee, records = [], adjustments = [], occurrences = [], holidays = [], monthKey, toleranceMinutes = 5, today = todayBelem() }) {
   const [year, month] = monthKey.split('-').map(Number);
   const daysInMonth = new Date(year, month, 0).getDate();
   const days = [];
@@ -317,7 +328,7 @@ export function absenceDeduction(monthlyPay, unjustifiedDays) {
 export function autoAbsenceDates({
   monthKey, startDate, endDate, presenceDates = [], coveredDates = [],
   scheduledDates = null,
-  today = dateKeyBelem(new Date().toISOString()),
+  today = todayBelem(),
 }) {
   const [year, month] = monthKey.split('-').map(Number);
   const daysInMonth = new Date(year, month, 0).getDate();
@@ -374,7 +385,7 @@ export function vacationEntitlementDays(unjustifiedAbsences) {
   return 0;
 }
 
-export function buildVacationPeriods(employee, occurrences = [], today = new Date().toISOString().slice(0, 10)) {
+export function buildVacationPeriods(employee, occurrences = [], today = todayBelem()) {
   const periods = [];
   let acqStart = employee.admissionDate;
   let guard = 0;
@@ -469,7 +480,7 @@ export function experienceDates(admissionDate, preset) {
   return { firstEnd, secondEnd };
 }
 
-export function contractPhase(employee, today = new Date().toISOString().slice(0, 10)) {
+export function contractPhase(employee, today = todayBelem()) {
   if (employee.contractType !== 'experiencia') return 'padrao';
   if (employee.experienceSecondEnd && today <= employee.experienceSecondEnd) return 'segundo_periodo';
   if (employee.experienceFirstEnd && today <= employee.experienceFirstEnd) return 'primeiro_periodo';
@@ -569,7 +580,7 @@ export function movableHolidays(year) {
 
 export function computeEmployeeAlerts({
   employees = [], vacationPeriods = [], exams = [], occurrences = [], terminations = [],
-  documentsByEmployee = {}, today = new Date().toISOString().slice(0, 10),
+  documentsByEmployee = {}, today = todayBelem(),
 }) {
   const alerts = [];
   const in7 = addDays(today, 7);

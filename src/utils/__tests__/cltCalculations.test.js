@@ -5,7 +5,7 @@ import {
   vacationEntitlementDays, validateVacationFractions, noticeDays,
   experienceDates, interjornadaViolations, movableHolidays, easterDate,
   dailyPayRate, absenceDeduction, payAfterAbsences, sundayBonus, computeEmployeeAlerts,
-  autoAbsenceDates, occurrenceCoveredDates,
+  autoAbsenceDates, occurrenceCoveredDates, weekdayOf,
 } from '../cltCalculations';
 
 describe('autoAbsenceDates — estagiário sem entrada nem saída no dia é falta', () => {
@@ -364,5 +364,23 @@ describe('computeMonth — falta só em dia transcorrido, atraso não desconta',
   it('sem schedule carregado nada é falta (regressão do campo ausente)', () => {
     const r = computeMonth({ employee: { id: 'e1', schedule: {} }, monthKey: '2026-09', today: '2026-09-30' });
     expect(r.totals.absencesUnjustified).toBe(0);
+  });
+});
+
+describe('datas independentes do fuso da máquina', () => {
+  it('addDays/diffDays/weekdayOf operam em calendário puro, cruzando mês, ano e bissexto', () => {
+    expect(addDays('2026-12-31', 1)).toBe('2027-01-01');
+    expect(addDays('2028-02-28', 1)).toBe('2028-02-29');
+    expect(addDays('2026-03-01', -1)).toBe('2026-02-28');
+    expect(diffDays('2026-01-01', '2027-01-01')).toBe(365);
+    expect(weekdayOf('2026-11-08')).toBe(0); // domingo
+  });
+
+  it('atraso na entrada é medido em horário de Belém (UTC-3), não da máquina', () => {
+    const day = computeDay({
+      employee: employee44h, dateStr: '2026-01-05', holidays: [], toleranceMinutes: 5, // segunda
+      marks: [markAt('2026-01-05', '08:30:00', 'entrada')],
+    });
+    expect(day.lateMinutes).toBe(30);
   });
 });

@@ -3,30 +3,21 @@
 // professionalId, message, dueDate }), mas com regras próprias do vínculo
 // comercial (CNPJ/NF/conselho), sem nada de natureza trabalhista.
 
-const addDays = (dateStr, days) => {
-  const d = new Date(`${dateStr}T00:00:00`);
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-};
-
-const diffDays = (fromStr, toStr) => {
-  const from = new Date(`${fromStr}T00:00:00`);
-  const to = new Date(`${toStr}T00:00:00`);
-  return Math.round((to - from) / 86400000);
-};
+import { addDays, diffDays, todayBelem } from './cltCalculations.js';
 
 export function computeProfessionalAlerts({
   professionals = [],
   nfKeysByProfessional = {},
-  today = new Date().toISOString().slice(0, 10),
+  today = todayBelem(),
 }) {
   const alerts = [];
   const in30 = addDays(today, 30);
   const in60 = addDays(today, 60);
   const currentCompetencia = today.slice(0, 7);
-  const prevDate = new Date(`${today}T00:00:00`);
-  prevDate.setMonth(prevDate.getMonth() - 1);
-  const prevCompetencia = prevDate.toISOString().slice(0, 7);
+  const [curYear, curMonth] = currentCompetencia.split('-').map(Number);
+  const prevCompetencia = curMonth === 1
+    ? `${curYear - 1}-12`
+    : `${curYear}-${String(curMonth - 1).padStart(2, '0')}`;
 
   for (const prof of professionals) {
     if (prof.active === false) continue;
