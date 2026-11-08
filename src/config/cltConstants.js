@@ -1,3 +1,5 @@
+import { todayBelem } from '../utils/cltCalculations.js';
+
 // Constantes do módulo Funcionários CLT: tipos de contrato, jornadas padrão,
 // checklist admissional, tipos de ocorrência/exame/encerramento e documentos
 // gerados. Mantidas fora de cltCalculations.js (puro) e cltDocuments.js
@@ -132,12 +134,14 @@ export const ADMISSIONAL_DOCUMENTS = [
   { key: 'termo_confidencialidade', label: 'Termo de Confidencialidade', required: () => false },
 ];
 
-function ageFromBirthdate(birthdate, at = new Date()) {
-  const b = new Date(birthdate);
-  if (Number.isNaN(b.getTime())) return 0;
-  let age = at.getFullYear() - b.getFullYear();
-  const m = at.getMonth() - b.getMonth();
-  if (m < 0 || (m === 0 && at.getDate() < b.getDate())) age--;
+// Idade em anos completos. Compara 'AAAA-MM-DD' campo a campo: new Date() de
+// uma data sem hora vira UTC e, lido em hora local, recua um dia no Brasil.
+function ageFromBirthdate(birthdate, at = todayBelem()) {
+  const b = String(birthdate || '').slice(0, 10).split('-').map(Number);
+  const a = String(at).slice(0, 10).split('-').map(Number);
+  if (b.length !== 3 || b.some(Number.isNaN) || a.some(Number.isNaN)) return 0;
+  let age = a[0] - b[0];
+  if (a[1] < b[1] || (a[1] === b[1] && a[2] < b[2])) age--;
   return age;
 }
 
